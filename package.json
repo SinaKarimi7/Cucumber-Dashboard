@@ -1,0 +1,160 @@
+{
+  "name": "cucumber-dashboard",
+  "displayName": "Cucumber Dashboard",
+  "description": "BDD Dashboard for Cucumber feature files and step definitions",
+  "version": "0.1.0",
+  "publisher": "cucumber-dash",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Testing",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "cucumber",
+    "gherkin",
+    "bdd",
+    "testing",
+    "step definitions"
+  ],
+  "activationEvents": [
+    "workspaceContains:**/*.feature"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Cucumber Dashboard",
+      "properties": {
+        "cucumberDash.featureGlobs": {
+          "type": "array",
+          "default": [
+            "features/**/*.feature",
+            "**/*.feature"
+          ],
+          "description": "Glob patterns to find feature files",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cucumberDash.stepDefGlobs": {
+          "type": "array",
+          "default": [
+            "**/*.{steps,step,stepdefs}.{ts,js}",
+            "**/*steps*/**/*.{ts,js}"
+          ],
+          "description": "Glob patterns to find step definition files",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cucumberDash.excludeGlobs": {
+          "type": "array",
+          "default": [
+            "**/node_modules/**",
+            "**/dist/**",
+            "**/build/**",
+            "**/.git/**"
+          ],
+          "description": "Glob patterns to exclude from indexing",
+          "items": {
+            "type": "string"
+          }
+        },
+        "cucumberDash.enableDiagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable diagnostics for undefined and ambiguous steps"
+        },
+        "cucumberDash.matchMode": {
+          "type": "string",
+          "enum": [
+            "both",
+            "regex",
+            "expression"
+          ],
+          "default": "both",
+          "description": "Step matching mode (regex, cucumber expressions, or both)"
+        }
+      }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "cucumberDash",
+          "title": "Cucumber",
+          "icon": "resources/cucumber-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "cucumberDash": [
+        {
+          "id": "cucumberDash.overviewView",
+          "name": "Overview"
+        },
+        {
+          "id": "cucumberDash.undefinedStepsView",
+          "name": "Undefined Steps"
+        },
+        {
+          "id": "cucumberDash.unusedDefsView",
+          "name": "Unused Step Definitions"
+        },
+        {
+          "id": "cucumberDash.ambiguousStepsView",
+          "name": "Ambiguous Steps"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "cucumberDash.reindex",
+        "title": "Reindex Workspace",
+        "category": "Cucumber"
+      },
+      {
+        "command": "cucumberDash.openDashboard",
+        "title": "Open Dashboard",
+        "category": "Cucumber"
+      },
+      {
+        "command": "cucumberDash.generateStepStub",
+        "title": "Generate Step Definition Stub",
+        "category": "Cucumber"
+      },
+      {
+        "command": "cucumberDash.showMatchingDefs",
+        "title": "Show Matching Definitions",
+        "category": "Cucumber"
+      }
+    ],
+    "languages": [
+      {
+        "id": "gherkin",
+        "extensions": [
+          ".feature"
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^18.x",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.x",
+    "@typescript-eslint/parser": "^6.x",
+    "eslint": "^8.x",
+    "typescript": "^5.3.0"
+  },
+  "dependencies": {
+    "@cucumber/gherkin": "^27.0.0",
+    "@cucumber/messages": "^24.0.0"
+  }
+}
