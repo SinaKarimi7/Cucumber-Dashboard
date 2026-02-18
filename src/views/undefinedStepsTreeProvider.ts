@@ -39,27 +39,49 @@ export class UndefinedStepsTreeProvider implements vscode.TreeDataProvider<TreeN
 
   getTreeItem(element: TreeNode): vscode.TreeItem {
     if (element instanceof FeatureNode) {
+      // Count undefined steps in this feature
+      const undefinedSteps = this.indexer.getIndex().getUndefinedSteps();
+      const count = undefinedSteps.filter(
+        (r) => r.step.uri.toString() === element.uri.toString(),
+      ).length;
+
       const item = new vscode.TreeItem(
         element.featureName,
         vscode.TreeItemCollapsibleState.Expanded,
       );
+      item.description = count.toString();
       item.iconPath = new vscode.ThemeIcon("file");
       item.contextValue = "feature";
+      item.tooltip = `${count} undefined step${count !== 1 ? "s" : ""}`;
       return item;
     } else if (element instanceof ScenarioNode) {
+      // Count undefined steps in this scenario
+      const undefinedSteps = this.indexer.getIndex().getUndefinedSteps();
+      const count = undefinedSteps.filter(
+        (r) =>
+          r.step.uri.toString() === element.uri.toString() &&
+          r.step.scenarioName === element.scenarioName,
+      ).length;
+
       const item = new vscode.TreeItem(
         element.scenarioName,
         vscode.TreeItemCollapsibleState.Expanded,
       );
+      item.description = count.toString();
       item.iconPath = new vscode.ThemeIcon("symbol-event");
       item.contextValue = "scenario";
+      item.tooltip = `${count} undefined step${count !== 1 ? "s" : ""}`;
       return item;
     } else {
       const step = element.step;
+      const label =
+        step.text.length > 50 ? step.text.substring(0, 50) + "..." : step.text;
+
       const item = new vscode.TreeItem(
-        `${step.keyword} ${step.text}`,
+        `${step.keyword} ${label}`,
         vscode.TreeItemCollapsibleState.None,
       );
+      item.description = `L${step.line}`;
       item.iconPath = new vscode.ThemeIcon(
         "error",
         new vscode.ThemeColor("errorForeground"),

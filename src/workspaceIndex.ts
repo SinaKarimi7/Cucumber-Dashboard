@@ -61,6 +61,18 @@ export class WorkspaceIndex {
     this.matchResults = results;
   }
 
+  /**
+   * Update match results for a specific feature (incremental)
+   */
+  updateFeatureMatchResults(uri: vscode.Uri, newResults: MatchResult[]) {
+    // Remove old results for this feature
+    this.matchResults = this.matchResults.filter(
+      (r) => r.step.uri.toString() !== uri.toString(),
+    );
+    // Add new results
+    this.matchResults.push(...newResults);
+  }
+
   getMatchResults(): MatchResult[] {
     return this.matchResults;
   }

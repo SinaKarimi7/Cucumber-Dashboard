@@ -13,6 +13,19 @@ export class MatchingEngine {
     steps: FeatureStep[],
     definitions: StepDefinition[],
   ): MatchResult[] {
+    // Early exit if no work to do
+    if (steps.length === 0) {
+      return [];
+    }
+
+    if (definitions.length === 0) {
+      return steps.map((step) => ({
+        step,
+        matches: [],
+        status: "undefined" as const,
+      }));
+    }
+
     return steps.map((step) => this.matchStep(step, definitions));
   }
 

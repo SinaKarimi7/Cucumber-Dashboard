@@ -18,11 +18,13 @@ export class StepDefinitionExtractor {
     const definitions: StepDefinition[] = [];
 
     try {
+      // Create TypeScript source file with proper options for performance
       const sourceFile = ts.createSourceFile(
         uri.fsPath,
         content,
         ts.ScriptTarget.Latest,
-        true,
+        true, // setParentNodes
+        ts.ScriptKind.TS,
       );
 
       const visit = (node: ts.Node) => {

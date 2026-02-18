@@ -38,8 +38,8 @@ export class UnusedDefsTreeProvider implements vscode.TreeDataProvider<TreeNode>
         vscode.TreeItemCollapsibleState.Collapsed,
       );
       item.iconPath = new vscode.ThemeIcon("file-code");
-      item.description = `${element.definitions.length} unused`;
-      item.tooltip = element.uri.fsPath;
+      item.description = element.definitions.length.toString();
+      item.tooltip = `${element.uri.fsPath}\n${element.definitions.length} unused definition${element.definitions.length !== 1 ? "s" : ""}`;
       item.contextValue = "file";
       return item;
     } else {
@@ -54,14 +54,14 @@ export class UnusedDefsTreeProvider implements vscode.TreeDataProvider<TreeNode>
         vscode.TreeItemCollapsibleState.None,
       );
       item.iconPath = new vscode.ThemeIcon("symbol-method");
-      item.description = def.keyword === "any" ? "Step" : def.keyword;
+      item.description = `L${def.range.start.line + 1}`;
       item.command = {
         command: "vscode.open",
         title: "Open",
         arguments: [def.uri, { selection: def.range }],
       };
       item.contextValue = "unusedDefinition";
-      item.tooltip = `${def.keyword}: ${label}`;
+      item.tooltip = `Line ${def.range.start.line + 1}: ${def.keyword === "any" ? "Step" : def.keyword} - ${label}`;
       return item;
     }
   }

@@ -8,6 +8,7 @@ import { AmbiguousStepsTreeProvider } from "./views/ambiguousStepsTreeProvider";
 import { DiagnosticsProvider } from "./diagnosticsProvider";
 import { CodeActionProvider } from "./codeActionProvider";
 import { StubGenerator } from "./stubGenerator";
+import { SearchCommand } from "./search";
 
 let indexer: IndexerService;
 let diagnosticsProvider: DiagnosticsProvider;
@@ -62,6 +63,9 @@ export async function activate(context: vscode.ExtensionContext) {
   // Register stub generator
   const stubGenerator = new StubGenerator(indexer);
 
+  // Register search command
+  const searchCommand = new SearchCommand(indexer);
+
   // Register commands
   context.subscriptions.push(
     vscode.commands.registerCommand("cucumberDash.reindex", async () => {
@@ -78,6 +82,17 @@ export async function activate(context: vscode.ExtensionContext) {
           );
         },
       );
+    }),
+
+    vscode.commands.registerCommand("cucumberDash.refreshViews", () => {
+      overviewProvider.refresh();
+      undefinedStepsProvider.refresh();
+      unusedDefsProvider.refresh();
+      ambiguousStepsProvider.refresh();
+    }),
+
+    vscode.commands.registerCommand("cucumberDash.search", async () => {
+      await searchCommand.execute();
     }),
 
     vscode.commands.registerCommand("cucumberDash.openDashboard", () => {

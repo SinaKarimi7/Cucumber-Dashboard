@@ -172,7 +172,7 @@ export class StubGenerator {
       hasDocString,
     );
 
-    return `${keyword}('${pattern}', ${paramList} => {\n  // TODO: Implement step\n});\n\n`;
+    return `${keyword}("${pattern}", async ${paramList} => {\n  // TODO: Implement step\n});\n\n`;
   }
 
   private resolveKeyword(step: FeatureStep): StepKeyword {
@@ -221,7 +221,10 @@ export class StubGenerator {
   private generatePattern(stepText: string): string {
     let pattern = stepText;
 
-    // Replace numbers with {int}
+    // Replace floats first (before integers)
+    pattern = pattern.replace(/\b\d+\.\d+\b/g, "{float}");
+
+    // Replace integers with {int}
     pattern = pattern.replace(/\b\d+\b/g, "{int}");
 
     // Replace quoted strings with {string}
@@ -238,16 +241,36 @@ export class StubGenerator {
   ): string {
     const params: string[] = [];
 
-    // Count numbers
-    const numbers = stepText.match(/\b\d+\b/g);
-    if (numbers) {
-      numbers.forEach((_, i) => params.push(`num${i + 1}`));
+    // Count floats (must check before integers)
+    const floats = stepText.match(/\b\d+\.\d+\b/g);
+    const floatCount = floats ? floats.length : 0;
+
+    // Count integers (excluding floats)
+    let textWithoutFloats = stepText;
+    if (floats) {
+      floats.forEach((f) => {
+        textWithoutFloats = textWithoutFloats.replace(f, "");
+      });
+    }
+    const integers = textWithoutFloats.match(/\b\d+\b/g);
+    const intCount = integers ? integers.length : 0;
+
+    // Add number parameters
+    for (let i = 0; i < floatCount; i++) {
+      params.push(floatCount === 1 ? "value" : `value${i + 1}`);
+    }
+    for (let i = 0; i < intCount; i++) {
+      params.push(intCount === 1 ? "count" : `count${i + 1}`);
     }
 
     // Count strings
     const strings = stepText.match(/["'][^"']*["']/g);
     if (strings) {
-      strings.forEach((_, i) => params.push(`str${i + 1}`));
+      if (strings.length === 1) {
+        params.push("text");
+      } else {
+        strings.forEach((_, i) => params.push(`text${i + 1}`));
+      }
     }
 
     // Add DataTable parameter if present
@@ -264,7 +287,7 @@ export class StubGenerator {
       return "()";
     }
 
-    return `(${params.join(", ")})`;
+    return `({ ${params.join(", ")} })`;
   }
 
   private async insertStub(uri: vscode.Uri, stubCode: string) {

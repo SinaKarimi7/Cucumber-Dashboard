@@ -111,7 +111,20 @@
       {
         "command": "cucumberDash.reindex",
         "title": "Reindex Workspace",
-        "category": "Cucumber"
+        "category": "Cucumber",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "cucumberDash.refreshViews",
+        "title": "Refresh Views",
+        "category": "Cucumber",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "cucumberDash.search",
+        "title": "Search Steps & Definitions",
+        "category": "Cucumber",
+        "icon": "$(search)"
       },
       {
         "command": "cucumberDash.openDashboard",
@@ -153,7 +166,36 @@
         "scopeName": "text.gherkin.feature",
         "path": "./syntaxes/gherkin.tmLanguage.json"
       }
-    ]
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "cucumberDash.refreshViews",
+          "when": "view == cucumberDash.overviewView",
+          "group": "navigation"
+        },
+        {
+          "command": "cucumberDash.search",
+          "when": "view == cucumberDash.overviewView",
+          "group": "navigation"
+        },
+        {
+          "command": "cucumberDash.reindex",
+          "when": "view == cucumberDash.overviewView"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "cucumberDash.refreshViews"
+        },
+        {
+          "command": "cucumberDash.search"
+        },
+        {
+          "command": "cucumberDash.reindex"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

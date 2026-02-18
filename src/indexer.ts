@@ -4,6 +4,7 @@ import { GherkinParser } from "./gherkinParser";
 import { StepDefinitionExtractor } from "./stepDefinitionExtractor";
 import { MatchingEngine } from "./matchingEngine";
 import { Config } from "./config";
+import { FeatureStep } from "./types";
 
 export class IndexerService {
   private index: WorkspaceIndex;
@@ -14,6 +15,13 @@ export class IndexerService {
   private indexDebounceTimer?: NodeJS.Timeout;
   private onDidIndexChangeEmitter = new vscode.EventEmitter<void>();
   readonly onDidIndexChange = this.onDidIndexChangeEmitter.event;
+  private isIndexing = false;
+  private indexCancellation?: vscode.CancellationTokenSource;
+
+  // Performance limits
+  private readonly MAX_FILE_SIZE = 1024 * 1024; // 1MB
+  private readonly BATCH_SIZE = 10; // Process 10 files at a time
+  private readonly DEBOUNCE_DELAY = 500; // ms
 
   constructor() {
     this.index = new WorkspaceIndex();
@@ -28,36 +36,78 @@ export class IndexerService {
   }
 
   async reindex() {
-    this.index.clear();
-    await this.indexFeatures();
-    await this.indexStepDefinitions();
-    this.performMatching();
-    this.notifyIndexChanged();
+    // Cancel previous indexing if running
+    if (this.indexCancellation) {
+      this.indexCancellation.cancel();
+      this.indexCancellation.dispose();
+    }
+
+    this.indexCancellation = new vscode.CancellationTokenSource();
+    const token = this.indexCancellation.token;
+
+    try {
+      this.isIndexing = true;
+      this.index.clear();
+
+      await this.indexFeatures(token);
+      if (token.isCancellationRequested) return;
+
+      await this.indexStepDefinitions(token);
+      if (token.isCancellationRequested) return;
+
+      this.performMatching();
+      this.notifyIndexChanged();
+    } finally {
+      this.isIndexing = false;
+      this.indexCancellation?.dispose();
+      this.indexCancellation = undefined;
+    }
   }
 
-  private async indexFeatures() {
+  private async indexFeatures(token: vscode.CancellationToken) {
     const featureGlobs = Config.getFeatureGlobs();
     const excludeGlobs = Config.getExcludeGlobs();
 
     for (const glob of featureGlobs) {
+      if (token.isCancellationRequested) return;
+
       const files = await vscode.workspace.findFiles(
         glob,
         `{${excludeGlobs.join(",")}}`,
       );
 
-      for (const uri of files) {
-        await this.indexFeatureFile(uri);
-      }
+      // Process files in batches to avoid blocking
+      await this.processBatch(
+        files,
+        (uri) => this.indexFeatureFile(uri, token),
+        token,
+      );
     }
   }
 
-  private async indexFeatureFile(uri: vscode.Uri) {
+  private async indexFeatureFile(
+    uri: vscode.Uri,
+    token?: vscode.CancellationToken,
+  ) {
+    if (token?.isCancellationRequested) return;
+
     try {
+      // Check file size limit
+      const stat = await vscode.workspace.fs.stat(uri);
+      if (stat.size > this.MAX_FILE_SIZE) {
+        console.warn(
+          `Skipping large feature file (${stat.size} bytes): ${uri.fsPath}`,
+        );
+        return;
+      }
+
       const document = await vscode.workspace.openTextDocument(uri);
+      if (token?.isCancellationRequested) return;
+
       const content = document.getText();
       const feature = await this.gherkinParser.parseFeature(uri, content);
 
-      if (feature) {
+      if (feature && !token?.isCancellationRequested) {
         this.index.setFeature(uri, feature);
       }
     } catch (error) {
@@ -65,36 +115,89 @@ export class IndexerService {
     }
   }
 
-  private async indexStepDefinitions() {
+  private async indexStepDefinitions(token: vscode.CancellationToken) {
     const stepDefGlobs = Config.getStepDefGlobs();
     const excludeGlobs = Config.getExcludeGlobs();
 
     for (const glob of stepDefGlobs) {
+      if (token.isCancellationRequested) return;
+
       const files = await vscode.workspace.findFiles(
         glob,
         `{${excludeGlobs.join(",")}}`,
       );
 
-      for (const uri of files) {
-        await this.indexStepDefinitionFile(uri);
-      }
+      // Process files in batches
+      await this.processBatch(
+        files,
+        (uri) => this.indexStepDefinitionFile(uri, token),
+        token,
+      );
     }
   }
 
-  private async indexStepDefinitionFile(uri: vscode.Uri) {
+  private async indexStepDefinitionFile(
+    uri: vscode.Uri,
+    token?: vscode.CancellationToken,
+  ) {
+    if (token?.isCancellationRequested) return;
+
     try {
+      // Check file size limit
+      const stat = await vscode.workspace.fs.stat(uri);
+      if (stat.size > this.MAX_FILE_SIZE) {
+        console.warn(
+          `Skipping large step def file (${stat.size} bytes): ${uri.fsPath}`,
+        );
+        return;
+      }
+
       const document = await vscode.workspace.openTextDocument(uri);
+      if (token?.isCancellationRequested) return;
+
       const content = document.getText();
       const definitions = await this.stepDefExtractor.extractDefinitions(
         uri,
         content,
       );
-      this.index.setStepDefinitions(uri, definitions);
+
+      if (!token?.isCancellationRequested) {
+        this.index.setStepDefinitions(uri, definitions);
+      }
     } catch (error) {
       console.error(
         `Failed to index step definition file ${uri.fsPath}:`,
         error,
       );
+    }
+  }
+
+  /**
+   * Process files in batches to avoid blocking the main thread
+   */
+  private async processBatch<T>(
+    items: T[],
+    processor: (item: T) => Promise<void>,
+    token?: vscode.CancellationToken,
+  ): Promise<void> {
+    for (let i = 0; i < items.length; i += this.BATCH_SIZE) {
+      if (token?.isCancellationRequested) return;
+
+      const batch = items.slice(i, i + this.BATCH_SIZE);
+
+      // Process batch in parallel
+      await Promise.all(
+        batch.map((item) =>
+          processor(item).catch((err) => {
+            console.error("Batch processing error:", err);
+          }),
+        ),
+      );
+
+      // Yield to event loop between batches
+      if (i + this.BATCH_SIZE < items.length) {
+        await new Promise((resolve) => setImmediate(resolve));
+      }
     }
   }
 
@@ -138,7 +241,7 @@ export class IndexerService {
   private onFeatureFileChanged(uri: vscode.Uri) {
     this.debounceReindex(async () => {
       await this.indexFeatureFile(uri);
-      this.performMatching();
+      this.performIncrementalMatching(uri);
     });
   }
 
@@ -152,6 +255,7 @@ export class IndexerService {
   private onStepDefFileChanged(uri: vscode.Uri) {
     this.debounceReindex(async () => {
       await this.indexStepDefinitionFile(uri);
+      // Step def changes affect all steps, need full re-match
       this.performMatching();
     });
   }
@@ -163,15 +267,52 @@ export class IndexerService {
     });
   }
 
+  /**
+   * Incremental matching - only re-match steps from changed feature file
+   */
+  private performIncrementalMatching(changedUri: vscode.Uri) {
+    const feature = this.index.getFeature(changedUri);
+    if (!feature) {
+      return;
+    }
+
+    const definitions = this.index.getAllStepDefinitions();
+    const featureSteps: FeatureStep[] = [];
+
+    feature.scenarios.forEach((scenario) => {
+      scenario.steps.forEach((step) => {
+        featureSteps.push({
+          ...step,
+          uri: feature.uri,
+          featureName: feature.name,
+          scenarioName: scenario.name,
+        });
+      });
+    });
+
+    // Only match steps from this feature
+    const newResults = this.matchingEngine.matchSteps(
+      featureSteps,
+      definitions,
+    );
+
+    // Update only the results for this feature
+    this.index.updateFeatureMatchResults(changedUri, newResults);
+  }
+
   private debounceReindex(action: () => void | Promise<void>) {
     if (this.indexDebounceTimer) {
       clearTimeout(this.indexDebounceTimer);
     }
 
     this.indexDebounceTimer = setTimeout(async () => {
-      await action();
-      this.notifyIndexChanged();
-    }, 500);
+      try {
+        await action();
+        this.notifyIndexChanged();
+      } catch (error) {
+        console.error("Debounced reindex error:", error);
+      }
+    }, this.DEBOUNCE_DELAY);
   }
 
   private notifyIndexChanged() {
@@ -194,5 +335,13 @@ export class IndexerService {
     if (this.indexDebounceTimer) {
       clearTimeout(this.indexDebounceTimer);
     }
+    if (this.indexCancellation) {
+      this.indexCancellation.cancel();
+      this.indexCancellation.dispose();
+    }
+  }
+
+  isCurrentlyIndexing(): boolean {
+    return this.isIndexing;
   }
 }

@@ -50,32 +50,53 @@ export class AmbiguousStepsTreeProvider implements vscode.TreeDataProvider<TreeN
 
   getTreeItem(element: TreeNode): vscode.TreeItem {
     if (element instanceof FeatureNode) {
+      // Count ambiguous steps in this feature
+      const ambiguousSteps = this.indexer.getIndex().getAmbiguousSteps();
+      const count = ambiguousSteps.filter(
+        (r) => r.step.uri.toString() === element.uri.toString(),
+      ).length;
+
       const item = new vscode.TreeItem(
         element.featureName,
         vscode.TreeItemCollapsibleState.Expanded,
       );
+      item.description = count.toString();
       item.iconPath = new vscode.ThemeIcon("file");
       item.contextValue = "feature";
+      item.tooltip = `${count} ambiguous step${count !== 1 ? "s" : ""}`;
       return item;
     } else if (element instanceof ScenarioNode) {
+      // Count ambiguous steps in this scenario
+      const ambiguousSteps = this.indexer.getIndex().getAmbiguousSteps();
+      const count = ambiguousSteps.filter(
+        (r) =>
+          r.step.uri.toString() === element.uri.toString() &&
+          r.step.scenarioName === element.scenarioName,
+      ).length;
+
       const item = new vscode.TreeItem(
         element.scenarioName,
         vscode.TreeItemCollapsibleState.Expanded,
       );
+      item.description = count.toString();
       item.iconPath = new vscode.ThemeIcon("symbol-event");
       item.contextValue = "scenario";
+      item.tooltip = `${count} ambiguous step${count !== 1 ? "s" : ""}`;
       return item;
     } else if (element instanceof StepNode) {
       const step = element.step;
+      const label =
+        step.text.length > 50 ? step.text.substring(0, 50) + "..." : step.text;
+
       const item = new vscode.TreeItem(
-        `${step.keyword} ${step.text}`,
+        `${step.keyword} ${label}`,
         vscode.TreeItemCollapsibleState.Expanded,
       );
       item.iconPath = new vscode.ThemeIcon(
         "warning",
         new vscode.ThemeColor("editorWarning.foreground"),
       );
-      item.description = `${element.matches.length} matches`;
+      item.description = `L${step.line} · ${element.matches.length} matches`;
       item.command = {
         command: "vscode.open",
         title: "Open",
@@ -85,7 +106,7 @@ export class AmbiguousStepsTreeProvider implements vscode.TreeDataProvider<TreeN
         ],
       };
       item.contextValue = "ambiguousStep";
-      item.tooltip = `Line ${step.line}: ${element.matches.length} matching definitions found`;
+      item.tooltip = `Line ${step.line}: ${step.keyword} ${step.text}\n${element.matches.length} matching definitions found`;
       return item;
     } else {
       const def = element.definition;

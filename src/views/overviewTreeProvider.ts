@@ -6,9 +6,13 @@ export class OverviewTreeProvider implements vscode.TreeDataProvider<TreeItem> {
     TreeItem | undefined | null | void
   >();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  private lastIndexedTime: Date | null = null;
 
   constructor(private indexer: IndexerService) {
-    indexer.onDidIndexChange(() => this.refresh());
+    indexer.onDidIndexChange(() => {
+      this.lastIndexedTime = new Date();
+      this.refresh();
+    });
   }
 
   refresh(): void {
@@ -25,8 +29,23 @@ export class OverviewTreeProvider implements vscode.TreeDataProvider<TreeItem> {
     }
 
     const stats = this.indexer.getIndex().getStats();
+    const items: TreeItem[] = [];
 
-    return Promise.resolve([
+    // Show indexing status if available
+    if (this.lastIndexedTime) {
+      const timeStr = this.formatTime(this.lastIndexedTime);
+      items.push(
+        new TreeItem(
+          `Last indexed: ${timeStr}`,
+          "",
+          vscode.TreeItemCollapsibleState.None,
+          "none",
+          "clock",
+        ),
+      );
+    }
+
+    items.push(
       new TreeItem(
         "Features",
         stats.totalFeatures,
@@ -60,21 +79,49 @@ export class OverviewTreeProvider implements vscode.TreeDataProvider<TreeItem> {
         vscode.TreeItemCollapsibleState.None,
         stats.unusedDefinitions > 0 ? "info" : "none",
       ),
-    ]);
+    );
+
+    return Promise.resolve(items);
+  }
+
+  private formatTime(date: Date): string {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+
+    if (seconds < 60) {
+      return "just now";
+    } else if (minutes < 60) {
+      return `${minutes}m ago`;
+    } else if (hours < 24) {
+      return `${hours}h ago`;
+    } else {
+      return date.toLocaleTimeString();
+    }
   }
 }
 
 class TreeItem extends vscode.TreeItem {
   constructor(
     public readonly label: string,
-    public readonly count: number,
+    public readonly count: number | string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
     public readonly severity: "error" | "warning" | "info" | "none" = "none",
+    public readonly iconName?: string,
   ) {
     super(label, collapsibleState);
-    this.description = count.toString();
 
-    if (severity === "error") {
+    if (typeof count === "number") {
+      this.description = count.toString();
+    } else {
+      this.description = count;
+    }
+
+    if (iconName) {
+      this.iconPath = new vscode.ThemeIcon(iconName);
+    } else if (severity === "error") {
       this.iconPath = new vscode.ThemeIcon(
         "error",
         new vscode.ThemeColor("errorForeground"),
