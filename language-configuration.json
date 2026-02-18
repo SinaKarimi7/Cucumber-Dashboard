@@ -1,0 +1,22 @@
+{
+  "comments": {
+    "lineComment": "#"
+  },
+  "brackets": [],
+  "autoClosingPairs": [
+    { "open": "\"", "close": "\"", "notIn": ["string"] },
+    { "open": "'", "close": "'", "notIn": ["string"] },
+    { "open": "<", "close": ">" }
+  ],
+  "surroundingPairs": [
+    { "open": "\"", "close": "\"" },
+    { "open": "'", "close": "'" },
+    { "open": "<", "close": ">" }
+  ],
+  "folding": {
+    "markers": {
+      "start": "^\\s*(Feature|Scenario|Scenario Outline|Background|Rule):",
+      "end": "^\\s*$"
+    }
+  }
+}

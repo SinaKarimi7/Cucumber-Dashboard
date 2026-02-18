@@ -51,7 +51,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const codeActionProvider = new CodeActionProvider(indexer);
   context.subscriptions.push(
     vscode.languages.registerCodeActionsProvider(
-      { language: "gherkin", scheme: "file" },
+      { language: "feature", scheme: "file" },
       codeActionProvider,
       {
         providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],

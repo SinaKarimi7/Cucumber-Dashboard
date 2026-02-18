@@ -33,10 +33,12 @@ export class GherkinParser {
 
     const gherkinFeature = gherkinDocument.feature;
     const scenarios: Scenario[] = [];
+    const featureTags = gherkinFeature.tags?.map((t) => t.name) || [];
 
     for (const child of gherkinFeature.children) {
       if (child.scenario) {
         const scenario = child.scenario;
+        const scenarioTags = scenario.tags?.map((t) => t.name) || [];
         const steps: FeatureStep[] = scenario.steps.map((step: any) => ({
           keyword: this.normalizeKeyword(step.keyword.trim()),
           text: step.text,
@@ -50,6 +52,7 @@ export class GherkinParser {
           name: scenario.name,
           steps,
           line: scenario.location.line,
+          tags: [...featureTags, ...scenarioTags],
         });
       } else if (child.background) {
         // Handle background steps
@@ -66,6 +69,7 @@ export class GherkinParser {
         scenarios.push({
           name: "Background",
           steps,
+          tags: [],
           line: background.location.line,
         });
       }
@@ -74,6 +78,7 @@ export class GherkinParser {
     return {
       name: gherkinFeature.name,
       uri,
+      tags: featureTags,
       scenarios,
     };
   }

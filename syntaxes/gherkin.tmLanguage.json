@@ -1,0 +1,163 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Gherkin",
+  "scopeName": "text.gherkin.feature",
+  "patterns": [
+    { "include": "#tags" },
+    { "include": "#comments" },
+    { "include": "#feature" },
+    { "include": "#scenario" },
+    { "include": "#background" },
+    { "include": "#steps" },
+    { "include": "#examples" },
+    { "include": "#table" },
+    { "include": "#docstring" },
+    { "include": "#placeholders" }
+  ],
+  "repository": {
+    "tags": {
+      "patterns": [
+        {
+          "name": "storage.type.tag.gherkin",
+          "match": "(@[^\\s]+)"
+        }
+      ]
+    },
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.gherkin",
+          "match": "^\\s*#.*$"
+        }
+      ]
+    },
+    "feature": {
+      "patterns": [
+        {
+          "name": "meta.feature.gherkin",
+          "match": "^\\s*(Feature|Ability|Business Need):\\s*(.*)$",
+          "captures": {
+            "1": { "name": "keyword.control.feature.gherkin" },
+            "2": { "name": "entity.name.function.feature.gherkin" }
+          }
+        }
+      ]
+    },
+    "scenario": {
+      "patterns": [
+        {
+          "name": "meta.scenario.gherkin",
+          "match": "^\\s*(Scenario|Scenario Outline|Scenario Template|Example):\\s*(.*)$",
+          "captures": {
+            "1": { "name": "keyword.control.scenario.gherkin" },
+            "2": { "name": "entity.name.function.scenario.gherkin" }
+          }
+        }
+      ]
+    },
+    "background": {
+      "patterns": [
+        {
+          "name": "meta.background.gherkin",
+          "match": "^\\s*(Background|Rule):\\s*(.*)$",
+          "captures": {
+            "1": { "name": "keyword.control.background.gherkin" },
+            "2": { "name": "entity.name.function.background.gherkin" }
+          }
+        }
+      ]
+    },
+    "steps": {
+      "patterns": [
+        {
+          "name": "meta.step.gherkin",
+          "match": "^\\s*(Given|When|Then|And|But|\\*)\\s+(.*)$",
+          "captures": {
+            "1": { "name": "keyword.other.step.gherkin" },
+            "2": {
+              "name": "string.unquoted.step.gherkin",
+              "patterns": [
+                {
+                  "name": "string.quoted.double.gherkin",
+                  "match": "\"[^\"]*\""
+                },
+                {
+                  "name": "string.quoted.single.gherkin",
+                  "match": "'[^']*'"
+                },
+                {
+                  "name": "constant.numeric.gherkin",
+                  "match": "\\b\\d+(\\.\\d+)?\\b"
+                },
+                {
+                  "name": "variable.parameter.gherkin",
+                  "match": "<[^>]+>"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "examples": {
+      "patterns": [
+        {
+          "name": "keyword.control.examples.gherkin",
+          "match": "^\\s*(Examples|Scenarios):\\s*(.*)$",
+          "captures": {
+            "1": { "name": "keyword.control.examples.gherkin" },
+            "2": { "name": "entity.name.function.examples.gherkin" }
+          }
+        }
+      ]
+    },
+    "table": {
+      "patterns": [
+        {
+          "name": "meta.table.row.gherkin",
+          "begin": "^\\s*\\|",
+          "end": "\\|\\s*$",
+          "beginCaptures": {
+            "0": { "name": "comment.line.table.separator.gherkin" }
+          },
+          "endCaptures": {
+            "0": { "name": "comment.line.table.separator.gherkin" }
+          },
+          "patterns": [
+            {
+              "name": "comment.line.table.separator.gherkin",
+              "match": "\\|"
+            },
+            {
+              "name": "variable.other.table.cell.gherkin",
+              "match": "[^|]+"
+            }
+          ]
+        }
+      ]
+    },
+    "docstring": {
+      "patterns": [
+        {
+          "name": "string.quoted.triple.gherkin",
+          "begin": "^\\s*\"\"\"",
+          "end": "^\\s*\"\"\"",
+          "patterns": [
+            {
+              "name": "string.quoted.triple.gherkin",
+              "match": ".*"
+            }
+          ]
+        }
+      ]
+    },
+    "placeholders": {
+      "patterns": [
+        {
+          "name": "variable.parameter.gherkin",
+          "match": "<[^>]+>"
+        }
+      ]
+    }
+  }
+}

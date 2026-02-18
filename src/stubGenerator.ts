@@ -24,6 +24,10 @@ export class StubGenerator {
 
     const step = stepResult.step;
 
+    // Check if step has data table or docstring
+    const hasDataTable = await this.hasDataTable(featureUri, line);
+    const hasDocString = await this.hasDocString(featureUri, line);
+
     // Ask user for target file
     const targetFile = await this.selectTargetFile();
     if (!targetFile) {
@@ -31,7 +35,7 @@ export class StubGenerator {
     }
 
     // Generate stub code
-    const stubCode = this.generateStubCode(step);
+    const stubCode = this.generateStubCode(step, hasDataTable, hasDocString);
 
     // Insert stub into target file
     await this.insertStub(targetFile, stubCode);
@@ -39,6 +43,40 @@ export class StubGenerator {
     vscode.window.showInformationMessage(
       `Step definition stub generated in ${targetFile.fsPath}`,
     );
+  }
+
+  private async hasDataTable(
+    uri: vscode.Uri,
+    stepLine: number,
+  ): Promise<boolean> {
+    try {
+      const document = await vscode.workspace.openTextDocument(uri);
+      const nextLine = stepLine + 1;
+      if (nextLine < document.lineCount) {
+        const nextLineText = document.lineAt(nextLine).text.trim();
+        return nextLineText.startsWith("|");
+      }
+    } catch (error) {
+      console.error("Error checking for data table:", error);
+    }
+    return false;
+  }
+
+  private async hasDocString(
+    uri: vscode.Uri,
+    stepLine: number,
+  ): Promise<boolean> {
+    try {
+      const document = await vscode.workspace.openTextDocument(uri);
+      const nextLine = stepLine + 1;
+      if (nextLine < document.lineCount) {
+        const nextLineText = document.lineAt(nextLine).text.trim();
+        return nextLineText.startsWith('"""') || nextLineText.startsWith("'''");
+      }
+    } catch (error) {
+      console.error("Error checking for docstring:", error);
+    }
+    return false;
   }
 
   private async selectTargetFile(): Promise<vscode.Uri | undefined> {
@@ -121,10 +159,18 @@ export class StubGenerator {
     }
   }
 
-  private generateStubCode(step: FeatureStep): string {
+  private generateStubCode(
+    step: FeatureStep,
+    hasDataTable: boolean,
+    hasDocString: boolean,
+  ): string {
     const keyword = this.resolveKeyword(step);
     const pattern = this.generatePattern(step.text);
-    const paramList = this.generateParameterList(step.text);
+    const paramList = this.generateParameterList(
+      step.text,
+      hasDataTable,
+      hasDocString,
+    );
 
     return `${keyword}('${pattern}', ${paramList} => {\n  // TODO: Implement step\n});\n\n`;
   }
@@ -185,7 +231,11 @@ export class StubGenerator {
     return pattern;
   }
 
-  private generateParameterList(stepText: string): string {
+  private generateParameterList(
+    stepText: string,
+    hasDataTable: boolean,
+    hasDocString: boolean,
+  ): string {
     const params: string[] = [];
 
     // Count numbers
@@ -198,6 +248,16 @@ export class StubGenerator {
     const strings = stepText.match(/["'][^"']*["']/g);
     if (strings) {
       strings.forEach((_, i) => params.push(`str${i + 1}`));
+    }
+
+    // Add DataTable parameter if present
+    if (hasDataTable) {
+      params.push("dataTable");
+    }
+
+    // Add DocString parameter if present
+    if (hasDocString) {
+      params.push("docString");
     }
 
     if (params.length === 0) {

@@ -40,12 +40,14 @@ export interface Feature {
   name: string;
   uri: vscode.Uri;
   scenarios: Scenario[];
+  tags: string[];
 }
 
 export interface Scenario {
   name: string;
   steps: FeatureStep[];
   line: number;
+  tags: string[];
 }
 
 export type MatchMode = "both" | "regex" | "expression";

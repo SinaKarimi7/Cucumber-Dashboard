@@ -83,7 +83,7 @@
         {
           "id": "cucumberDash",
           "title": "Cucumber",
-          "icon": "resources/cucumber-icon.svg"
+          "icon": "$(testing-passed-icon)"
         }
       ]
     },
@@ -131,10 +131,27 @@
     ],
     "languages": [
       {
-        "id": "gherkin",
+        "id": "feature",
+        "aliases": [
+          "Gherkin",
+          "gherkin",
+          "Cucumber"
+        ],
         "extensions": [
           ".feature"
-        ]
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./resources/feature-file-icon.png",
+          "dark": "./resources/feature-file-icon.png"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "feature",
+        "scopeName": "text.gherkin.feature",
+        "path": "./syntaxes/gherkin.tmLanguage.json"
       }
     ]
   },
