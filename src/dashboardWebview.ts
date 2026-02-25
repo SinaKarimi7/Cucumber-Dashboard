@@ -195,7 +195,7 @@ export class DashboardWebviewProvider {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' 'unsafe-inline';">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cucumber Dashboard</title>
   <style>
@@ -1082,13 +1082,6 @@ export class DashboardWebviewProvider {
       renderPagination(steps.length);
     }
 
-    function goToDefinition(defId) {
-      const def = dashboardData.definitions.find(d => d.id === defId);
-      if (def) {
-        vscode.postMessage({ type: 'openDefinition', uri: def.uri, line: def.line });
-      }
-    }
-
     function renderPagination(totalSteps) {
       const totalPages = Math.ceil(totalSteps / PAGE_SIZE);
       if (totalPages <= 1) {
@@ -1555,22 +1548,6 @@ export class DashboardWebviewProvider {
       currentPage = page;
       filterSteps();
     };
-
-    function openStep(uri, line) {
-      vscode.postMessage({ type: 'openStep', uri, line });
-    }
-
-    function openDefinition(uri, line) {
-      vscode.postMessage({ type: 'openDefinition', uri, line });
-    }
-
-    function generateStub(stepId) {
-      vscode.postMessage({ type: 'generateStub', stepId });
-    }
-
-    function showMatches(stepId) {
-      vscode.postMessage({ type: 'showMatches', stepId });
-    }
 
     function formatDate(isoString) {
       const date = new Date(isoString);
