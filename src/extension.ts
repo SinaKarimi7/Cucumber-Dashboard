@@ -9,9 +9,11 @@ import { DiagnosticsProvider } from "./diagnosticsProvider";
 import { CodeActionProvider } from "./codeActionProvider";
 import { StubGenerator } from "./stubGenerator";
 import { SearchCommand } from "./search";
+import { DashboardWebviewProvider } from "./dashboardWebview";
 
 let indexer: IndexerService;
 let diagnosticsProvider: DiagnosticsProvider;
+let dashboardProvider: DashboardWebviewProvider;
 
 export async function activate(context: vscode.ExtensionContext) {
   console.log("Cucumber Dashboard extension is now active");
@@ -66,8 +68,18 @@ export async function activate(context: vscode.ExtensionContext) {
   // Register search command
   const searchCommand = new SearchCommand(indexer);
 
+  // Register dashboard webview provider
+  dashboardProvider = new DashboardWebviewProvider(context, indexer);
+
   // Register commands
   context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "cucumberDash.openWebDashboard",
+      async () => {
+        await dashboardProvider.openDashboard();
+      },
+    ),
+
     vscode.commands.registerCommand("cucumberDash.reindex", async () => {
       await vscode.window.withProgress(
         {
@@ -113,6 +125,18 @@ export async function activate(context: vscode.ExtensionContext) {
           line = editor.selection.active.line;
         }
         await stubGenerator.generateStepStub(uri, line);
+      },
+    ),
+
+    // Alias for backward compatibility with webview messaging
+    vscode.commands.registerCommand(
+      "cucumberDash.generateStub",
+      async (uri?: vscode.Uri, line?: number) => {
+        await vscode.commands.executeCommand(
+          "cucumberDash.generateStepStub",
+          uri,
+          line,
+        );
       },
     ),
 

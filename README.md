@@ -29,7 +29,68 @@ The extension adds a "Cucumber" view container to your activity bar with four in
   - Displays **line numbers** and match counts
   - Expandable to see all matching definitions
 
-### 🔍 Real-time Indexing & Status
+### � Interactive Web Dashboard
+
+**New!** Rich webview dashboard with metrics, charts, filtering, and export capabilities:
+
+- **Access**: Click the **Dashboard** icon (📊) in Overview toolbar, or run `Cucumber: Open Web Dashboard`
+
+- **Summary Cards**: Big numbers showing totals (click to filter)
+  - Total Features/Scenarios/Steps
+  - Undefined Steps (error)
+  - Ambiguous Steps (warning)
+  - Unused Definitions
+  - Match Rate percentage
+
+- **Interactive Charts** (all clickable for filtering):
+  - **Bar Chart**: Top 10 features with undefined steps
+  - **Histogram**: Usage distribution of step definitions (0, 1, 2-5, 6-20, 20+ buckets)
+  - **Pie Chart**: Step status breakdown (matched/undefined/ambiguous)
+  - **Tag Chart**: Top 10 tags with undefined steps
+  - **Trend Line**: Match rate over time (when history is enabled)
+
+- **Advanced Filtering**:
+  - **Text search**: Filter steps by substring
+  - **Feature dropdown**: Filter by specific feature file
+  - **Status filter**: Show only undefined/ambiguous/matched steps
+  - **Tag filter**: 🏷️ Multi-select tags with AND/OR mode
+    - Select multiple tags with "Add Tag" button
+    - Toggle between "Any tags (OR)" or "All tags (AND)" mode
+    - Tags shown as chips with × to remove
+
+- **Drill-down Tables**:
+  - **Steps table**: Shows status, step text, tags, feature, scenario, line, and actions
+    - Click row to open step in editor
+    - Generate stub for undefined steps
+    - Show matches for ambiguous steps
+    - Paginated (500 per page) for performance
+  - **Unused Definitions table**: Pattern, file, line, actions
+    - Click row to open definition
+    - "Find Similar" to search for similar steps
+
+- **Export Reports**:
+  - **Export JSON**: Full data + computed aggregates → `.vscode/cucumber-dashboard-report.json`
+  - **Export HTML**: Standalone report with embedded charts → `.vscode/cucumber-dashboard-report.html`
+    - Opens in any browser outside VS Code
+    - Self-contained with embedded JavaScript
+
+- **Theme Support**: 🎨 Auto-adapts to VS Code theme (dark/light/high-contrast)
+  - Uses VS Code color variables everywhere
+  - Charts automatically use theme-friendly colors
+  - Responds to theme changes in real-time
+
+- **Tag Support**: 🏷️ Automatically extracts and indexes tags from:
+  - Feature-level tags (inherited by all scenarios)
+  - Scenario-level tags
+  - Effective tags = union of feature + scenario tags
+  - Tag normalization ensures `@` prefix
+
+- **Optional History Tracking**: Enable `cucumberDash.persistHistory` to:
+  - Track match rate, undefined/ambiguous counts over time
+  - View trend chart (last 30 indexes)
+  - Persisted to `.vscode/cucumber-dashboard-history.json`
+
+### �🔍 Real-time Indexing & Status
 
 - Automatically indexes `.feature` files and step definition files on activation
 - Watches for file changes and updates incrementally (debounced for performance)
@@ -103,7 +164,8 @@ Customize via `settings.json`:
     "**/.git/**"
   ],
   "cucumberDash.enableDiagnostics": true,
-  "cucumberDash.matchMode": "both"
+  "cucumberDash.matchMode": "both",
+  "cucumberDash.persistHistory": false
 }
 ```
 
@@ -128,7 +190,8 @@ Supports both matching modes:
 ### Commands
 
 Access via Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
-
+Open Web Dashboard` - Open rich interactive dashboard with charts and filters
+- `Cucumber:
 - `Cucumber: Search Steps & Definitions` - Quick search across all steps and definitions
 - `Cucumber: Open Dashboard` - Focus the Cucumber sidebar
 - `Cucumber: Reindex Workspace` - Manually trigger a full reindex
@@ -138,7 +201,8 @@ Access via Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`):
 ### Toolbar Actions
 
 In the Overview view title bar:
-
+� **Dashboard** - Open interactive web dashboard
+- �
 - 🔄 **Refresh** - Refresh all views
 - 🔍 **Search** - Quick search for steps/definitions
 - ⚙️ **Reindex** - Full workspace reindex (in dropdown menu)
@@ -256,14 +320,63 @@ Enable/disable diagnostics in the Problems panel.
 Pattern matching mode for step definitions.
 
 **Options**: `"both"`, `"regex"`, `"expression"`
-**Default**: `"both"`
+**# `cucumberDash.persistHistory`
+
+Enable history tracking for trend analysis in web dashboard.
+
+**Default**: `false`
+
+When enabled, each index run appends a record to `.vscode/cucumber-dashboard-history.json` with match rate and undefined/ambiguous/unused counts. The dashboard displays a trend chart showing match rate over the last 30 indexes.
 
 ## Known Issues
 
 - Template literals with expressions (`${variable}`) in step definitions are not supported
 - Background steps are indexed but may not infer keywords perfectly for And/But steps
+- Only literal step patterns are indexed (dynamically generated patterns are not detected)
+- Web dashboard renders first 500 steps (pagination available for more)
 
 ## Release Notes
+
+### 0.3.0 (Current)
+
+**Interactive Web Dashboard with Tags**:
+
+- **Rich Web Dashboard**:
+  - Interactive charts (bar, histogram, pie, line) with click-to-filter
+  - Summary cards showing key metrics
+  - Drill-down tables with pagination
+  - Export to JSON and HTML reports
+  - Standalone HTML reports open in any browser
+
+- **Tag Support**:
+  - Automatically extracts tags from features and scenarios
+  - Tag inheritance (scenario inherits feature tags)
+  - Multi-select tag filtering with AND/OR modes
+  - Tag charts showing undefined steps by tag
+  - Tag chips displayed in tables
+
+- **Advanced Filtering**:
+  - Text search across step text
+  - Feature file dropdown filter
+  - Status filter (undefined/ambiguous/matched)
+  - Multi-tag filter with OR/AND mode selector
+
+- **Theme Support**:
+  - Full VS Code theme integration (dark/light/high-contrast)
+  - Charts use theme-aware colors
+  - Automatic re-render on theme changes
+
+- **History Tracking** (optional):
+  - Trend chart showing match rate over time
+  - Persisted to `.vscode/cucumber-dashboard-history.json`
+  - Configurable via `cucumberDash.persistHistory` setting
+
+- **Performance**:
+  - Pagination for large step lists (500 per page)
+  - Theme-aware canvas rendering for charts
+  - Efficient filtering in webview (no repeated data transfer)
+
+### 0.2.0
 
 ### 0.2.0 (Current)
 

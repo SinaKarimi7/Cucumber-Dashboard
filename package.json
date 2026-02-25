@@ -2,7 +2,7 @@
   "name": "cucumber-dashboard",
   "displayName": "Cucumber Dashboard",
   "description": "BDD Dashboard for Cucumber feature files and step definitions",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "publisher": "cucumber-dash",
   "engines": {
     "vscode": "^1.85.0"
@@ -75,6 +75,11 @@
           ],
           "default": "both",
           "description": "Step matching mode (regex, cucumber expressions, or both)"
+        },
+        "cucumberDash.persistHistory": {
+          "type": "boolean",
+          "default": false,
+          "description": "Persist dashboard history for trend tracking (last 30 indexes)"
         }
       }
     },
@@ -108,6 +113,12 @@
       ]
     },
     "commands": [
+      {
+        "command": "cucumberDash.openWebDashboard",
+        "title": "Open Web Dashboard",
+        "category": "Cucumber",
+        "icon": "$(dashboard)"
+      },
       {
         "command": "cucumberDash.reindex",
         "title": "Reindex Workspace",
@@ -169,6 +180,11 @@
     ],
     "menus": {
       "view/title": [
+        {
+          "command": "cucumberDash.openWebDashboard",
+          "when": "view == cucumberDash.overviewView",
+          "group": "navigation"
+        },
         {
           "command": "cucumberDash.refreshViews",
           "when": "view == cucumberDash.overviewView",

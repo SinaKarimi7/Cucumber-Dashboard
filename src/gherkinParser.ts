@@ -52,7 +52,7 @@ export class GherkinParser {
           name: scenario.name,
           steps,
           line: scenario.location.line,
-          tags: [...featureTags, ...scenarioTags],
+          tags: scenarioTags, // Only scenario-level tags, not combined with feature tags
         });
       } else if (child.background) {
         // Handle background steps

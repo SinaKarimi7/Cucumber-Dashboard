@@ -1,8 +1,10 @@
+@e2e @shopping
 Feature: Sample Shopping Cart
   As a customer
   I want to manage my shopping cart
   So that I can purchase items
 
+  @smoke @cart-add
   Scenario: Add item to cart
     Given I am on the homepage
     When I click the "Add to Cart" button
@@ -10,11 +12,13 @@ Feature: Sample Shopping Cart
     Then I see 3 items in my cart
     And the total is "$45.00"
 
+  @cart-remove
   Scenario: Remove item from cart
     Given I have 5 items in my cart
     When I remove 2 items
     Then I see 3 items in my cart
 
+  @smoke @cart-clear
   Scenario: Empty cart
     Given I have items in my cart
     When I click the "Clear Cart" button
