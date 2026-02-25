@@ -7,6 +7,7 @@
       "dependencies": {
         "@cucumber/gherkin": "^27.0.0",
         "@cucumber/messages": "^24.0.0",
+        "typescript": "^5.3.0",
       },
       "devDependencies": {
         "@types/node": "^18.x",
@@ -14,7 +15,6 @@
         "@typescript-eslint/eslint-plugin": "^6.x",
         "@typescript-eslint/parser": "^6.x",
         "eslint": "^8.x",
-        "typescript": "^5.3.0",
       },
     },
   },

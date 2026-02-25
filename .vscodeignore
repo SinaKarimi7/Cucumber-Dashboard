@@ -4,4 +4,7 @@ src/**
 .gitignore
 tsconfig.json
 **/*.map
-**/*.ts
+!out/**
+out/**/*.ts
+bun.lock
+*.vsix

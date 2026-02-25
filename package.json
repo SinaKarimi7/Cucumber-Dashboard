@@ -3,7 +3,11 @@
   "displayName": "Cucumber Dashboard",
   "description": "BDD Dashboard for Cucumber feature files and step definitions",
   "version": "0.3.0",
-  "publisher": "cucumber-dash",
+  "publisher": "cinna",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SinaKarimi7/cucumber-dashboard.git"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -19,6 +23,11 @@
     "step definitions"
   ],
   "activationEvents": [
+    "onView:cucumberDash.overviewView",
+    "onCommand:cucumberDash.openWebDashboard",
+    "onCommand:cucumberDash.reindex",
+    "onCommand:cucumberDash.refreshViews",
+    "onCommand:cucumberDash.search",
     "workspaceContains:**/*.feature"
   ],
   "main": "./out/extension.js",
@@ -225,11 +234,11 @@
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^6.x",
     "@typescript-eslint/parser": "^6.x",
-    "eslint": "^8.x",
-    "typescript": "^5.3.0"
+    "eslint": "^8.x"
   },
   "dependencies": {
     "@cucumber/gherkin": "^27.0.0",
-    "@cucumber/messages": "^24.0.0"
+    "@cucumber/messages": "^24.0.0",
+    "typescript": "^5.3.0"
   }
 }
